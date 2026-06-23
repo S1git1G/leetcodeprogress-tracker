@@ -86,35 +86,33 @@ if (isConfigured) {
     },
     // Mock database tables operations
     from: (tableName) => {
-      if (tableName !== 'solved_logs') {
+      if (tableName !== 'solved_logs' && tableName !== 'concept_notes') {
         throw new Error(`Mock table "${tableName}" is not supported`);
       }
 
-      const getLogs = () => {
+      const getItems = () => {
         const session = JSON.parse(localStorage.getItem('mock_session'));
         if (!session || !session.user) return [];
         const userId = session.user.id;
-        const allLogs = JSON.parse(localStorage.getItem('mock_solved_logs') || '[]');
-        return allLogs.filter(log => log.user_id === userId);
+        const allItems = JSON.parse(localStorage.getItem(`mock_${tableName}`) || '[]');
+        return allItems.filter(item => item.user_id === userId);
       };
 
-      const saveLogs = (logs) => {
+      const saveItems = (items) => {
         const session = JSON.parse(localStorage.getItem('mock_session'));
         if (!session || !session.user) return;
         const userId = session.user.id;
-        const allLogs = JSON.parse(localStorage.getItem('mock_solved_logs') || '[]');
-        // Filter out this user's old logs and merge new ones
-        const otherLogs = allLogs.filter(log => log.user_id !== userId);
-        localStorage.setItem('mock_solved_logs', JSON.stringify([...otherLogs, ...logs]));
+        const allItems = JSON.parse(localStorage.getItem(`mock_${tableName}`) || '[]');
+        const otherItems = allItems.filter(item => item.user_id !== userId);
+        localStorage.setItem(`mock_${tableName}`, JSON.stringify([...otherItems, ...items]));
       };
 
       return {
         select: (columns) => {
           return {
             eq: (col, val) => {
-              // Usually we filter by user_id
-              const logs = getLogs();
-              const filtered = col === 'user_id' ? logs.filter(l => l.user_id === val) : logs.filter(l => l[col] === val);
+              const items = getItems();
+              const filtered = items.filter(l => l[col] === val);
               
               return {
                 order: (orderCol, { ascending = true } = {}) => {
@@ -131,7 +129,7 @@ if (isConfigured) {
                 error: null
               };
             },
-            data: getLogs(),
+            data: getItems(),
             error: null
           };
         },
@@ -141,38 +139,35 @@ if (isConfigured) {
             return { data: null, error: { message: 'Unauthorized' } };
           }
           const userId = session.user.id;
-          const currentLogs = getLogs();
+          const currentItems = getItems();
           const newEntries = (Array.isArray(dataArray) ? dataArray : [dataArray]).map(item => ({
-            id: 'log-' + Math.random().toString(36).substr(2, 9),
+            id: 'mock-id-' + Math.random().toString(36).substr(2, 9),
             user_id: userId,
             created_at: new Date().toISOString(),
-            solved_at: item.solved_at || new Date().toISOString().split('T')[0],
-            revision_count: item.revision_count || 0,
-            notes: item.notes || '',
             ...item
           }));
 
-          saveLogs([...currentLogs, ...newEntries]);
+          saveItems([...currentItems, ...newEntries]);
           return { data: newEntries, error: null };
         },
         update: async (updateData) => {
           return {
             eq: (col, val) => {
-              const logs = getLogs();
-              let updatedLogs = [];
+              const items = getItems();
+              let updatedItems = [];
               const affected = [];
 
-              logs.forEach(log => {
-                if (log[col] === val) {
-                  const updated = { ...log, ...updateData };
-                  updatedLogs.push(updated);
+              items.forEach(item => {
+                if (item[col] === val) {
+                  const updated = { ...item, ...updateData };
+                  updatedItems.push(updated);
                   affected.push(updated);
                 } else {
-                  updatedLogs.push(log);
+                  updatedItems.push(item);
                 }
               });
 
-              saveLogs(updatedLogs);
+              saveItems(updatedItems);
               return { data: affected, error: null };
             }
           };
@@ -180,9 +175,9 @@ if (isConfigured) {
         delete: async () => {
           return {
             eq: (col, val) => {
-              const logs = getLogs();
-              const remaining = logs.filter(log => log[col] !== val);
-              saveLogs(remaining);
+              const items = getItems();
+              const remaining = items.filter(item => item[col] !== val);
+              saveItems(remaining);
               return { data: null, error: null };
             }
           };

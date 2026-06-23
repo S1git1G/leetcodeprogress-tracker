@@ -48,3 +48,32 @@ CREATE POLICY "Users can delete their own logs"
 CREATE INDEX IF NOT EXISTS solved_logs_user_id_idx ON public.solved_logs(user_id);
 CREATE INDEX IF NOT EXISTS solved_logs_solved_at_idx ON public.solved_logs(solved_at);
 CREATE INDEX IF NOT EXISTS solved_logs_topic_idx ON public.solved_logs(topic);
+
+-- Create table for storing general conceptual notes
+CREATE TABLE IF NOT EXISTS public.concept_notes (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable RLS for concept_notes
+ALTER TABLE public.concept_notes ENABLE ROW LEVEL SECURITY;
+
+-- Policies for concept_notes
+CREATE POLICY "Users can view their own concept notes" 
+    ON public.concept_notes FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own concept notes" 
+    ON public.concept_notes FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own concept notes" 
+    ON public.concept_notes FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own concept notes" 
+    ON public.concept_notes FOR DELETE USING (auth.uid() = user_id);
+
+-- Index for performance
+CREATE INDEX IF NOT EXISTS concept_notes_user_id_idx ON public.concept_notes(user_id);
+

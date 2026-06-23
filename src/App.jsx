@@ -7,6 +7,7 @@ import DailyTracker from './components/DailyTracker';
 import TopicSheet from './components/TopicSheet';
 import RevisionCenter from './components/RevisionCenter';
 import RevisionModal from './components/RevisionModal';
+import ConceptNotes from './components/ConceptNotes';
 import { defaultProblems } from './data/defaultProblems';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
   const [solvedLogs, setSolvedLogs] = useState([]);
+  const [conceptNotes, setConceptNotes] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   
@@ -33,6 +35,7 @@ export default function App() {
       } else {
         setUser(null);
         setSolvedLogs([]);
+        setConceptNotes([]);
       }
       setLoadingUser(false);
     });
@@ -47,6 +50,7 @@ export default function App() {
   useEffect(() => {
     if (user) {
       fetchSolvedLogs();
+      fetchConceptNotes();
     }
   }, [user]);
 
@@ -64,6 +68,22 @@ export default function App() {
       console.error('Error fetching logs:', err.message);
     } finally {
       setLoadingLogs(false);
+    }
+  };
+
+  const fetchConceptNotes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('concept_notes')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      // Sort by created_at descending
+      const sorted = (data || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setConceptNotes(sorted);
+    } catch (err) {
+      console.error('Error fetching concept notes:', err.message);
     }
   };
 
@@ -154,6 +174,56 @@ export default function App() {
     }
   };
 
+  const handleAddConceptNote = async (noteData) => {
+    try {
+      const { data, error } = await supabase
+        .from('concept_notes')
+        .insert([{ ...noteData, user_id: user.id }]);
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setConceptNotes(prev => [data[0], ...prev]);
+      } else {
+        fetchConceptNotes();
+      }
+    } catch (err) {
+      console.error('Error adding concept note:', err.message);
+      alert(`Failed to save note: ${err.message}`);
+    }
+  };
+
+  const handleDeleteConceptNote = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('concept_notes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      setConceptNotes(prev => prev.filter(note => note.id !== id));
+    } catch (err) {
+      console.error('Error deleting concept note:', err.message);
+      alert(`Failed to delete note: ${err.message}`);
+    }
+  };
+
+  const handleUpdateConceptNote = async (id, updatedFields) => {
+    try {
+      const { data, error } = await supabase
+        .from('concept_notes')
+        .update(updatedFields)
+        .eq('id', id);
+
+      if (error) throw error;
+      setConceptNotes(prev => prev.map(note => 
+        note.id === id ? { ...note, ...updatedFields } : note
+      ));
+    } catch (err) {
+      console.error('Error updating concept note:', err.message);
+      alert(`Failed to update note: ${err.message}`);
+    }
+  };
+
   // 4. Render Active View Router
   const renderActiveView = () => {
     if (loadingLogs) {
@@ -201,6 +271,15 @@ export default function App() {
             onUpdateLog={handleUpdateLog} 
             revisionDays={revisionDays} 
             setRevisionDays={setRevisionDays} 
+          />
+        );
+      case 'concepts':
+        return (
+          <ConceptNotes 
+            conceptNotes={conceptNotes}
+            onAddNote={handleAddConceptNote}
+            onDeleteNote={handleDeleteConceptNote}
+            onUpdateNote={handleUpdateConceptNote}
           />
         );
       default:

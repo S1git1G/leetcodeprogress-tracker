@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, BookOpen, RefreshCw, LogOut, Trophy } from 'lucide-react';
+import { LayoutDashboard, Calendar, BookOpen, RefreshCw, LogOut, Trophy, Book } from 'lucide-react';
 import supabase from '../supabaseClient';
 
 export default function Sidebar({ activePage, setActivePage, user, solvedCount, totalProblems }) {
@@ -10,6 +10,7 @@ export default function Sidebar({ activePage, setActivePage, user, solvedCount, 
     { id: 'daily', name: 'Daily Tracker', icon: Calendar },
     { id: 'topics', name: 'Topic Sheets', icon: BookOpen },
     { id: 'revision', name: 'Revision Center', icon: RefreshCw },
+    { id: 'concepts', name: 'Concept Notes', icon: Book },
   ];
 
   const handleSignOut = async () => {
