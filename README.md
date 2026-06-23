@@ -91,3 +91,36 @@ Since the app is a React Single Page Application (SPA), you can easily host it f
    ```bash
    npm run deploy
    ```
+
+---
+
+## 💡 Key Architectural Insights & Learnings
+
+Building LeetCrack taught us several core lessons about modern software engineering and system architecture:
+
+### 1. Static Web Apps & Client-Side Execution
+Instead of hosting a running application server (like Node.js, Express, or Python), LeetCrack compiles into pure **static HTML, CSS, and JavaScript** via Vite.
+*   **Result:** The entire application runs 100% inside the user's web browser. 
+*   **Hosting Benefit:** Because there is no server-side compilation or routing required, we can host the entire app completely for free on **GitHub Pages** with zero setup costs.
+
+### 2. Serverless Database Architecture (Supabase)
+Instead of managing a physical database instance and writing server APIs to connect to it:
+*   We use **Supabase** as a Backend-as-a-Service (BaaS).
+*   Supabase manages the PostgreSQL server and exposes secure API endpoints.
+*   The frontend communicates directly with these database APIs using secure HTTPS web calls, eliminating the need to maintain backend servers.
+
+### 3. Row Level Security (RLS)
+Security is implemented directly in the database layers using Postgres RLS:
+*   Instead of writing middleware routes to authorize queries, the database automatically filters query requests using policies like `auth.uid() = user_id`.
+*   This ensures that no user can ever inspect or modify another user's solved logs or notes, even when accessing the database APIs directly.
+
+### 4. Smart LocalStorage Mocking
+To achieve a "zero-configuration" first-run experience, we implemented an API wrapper:
+*   If cloud configuration variables (`.env`) are missing, the client automatically defaults to **Offline Local Mode**.
+*   It mocks the entire Supabase database and Auth behavior using the browser's built-in **LocalStorage**.
+*   This allows recruiters and guests to run, view, and interact with the application instantly without needing to sign up or set up databases.
+
+### 5. Why Docker was Bypassed
+Docker is traditionally used to package up complex backend running environments (databases, dependencies, server engines) so they behave identically across dev and production.
+*   Because our app runs completely client-side in the browser and connects to a serverless cloud database, **we have zero server code to containerize**. This makes the project lightweight, portable, and extremely easy to scale!
+
