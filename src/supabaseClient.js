@@ -22,6 +22,12 @@ if (isConfigured) {
     'To connect your cloud database, copy .env.example to .env and fill in the values.'
   );
 
+  // Global tracking array for mock auth event listeners in the active tab
+  const mockAuthListeners = [];
+  const triggerMockAuthChange = (event, session) => {
+    mockAuthListeners.forEach(cb => cb(event, session));
+  };
+
   // Implement a Mock Supabase client so the app runs smoothly out-of-the-box
   supabase = {
     isMock: true,
@@ -45,6 +51,7 @@ if (isConfigured) {
         
         const session = { user: newUser, access_token: 'mock-token' };
         localStorage.setItem('mock_session', JSON.stringify(session));
+        triggerMockAuthChange('SIGNED_IN', session);
         return { data: { user: newUser, session }, error: null };
       },
       signInWithPassword: async ({ email, password }) => {
@@ -55,17 +62,21 @@ if (isConfigured) {
         }
         const session = { user: { id: user.id, email: user.email }, access_token: 'mock-token' };
         localStorage.setItem('mock_session', JSON.stringify(session));
+        triggerMockAuthChange('SIGNED_IN', session);
         return { data: { user: session.user, session }, error: null };
       },
       signOut: async () => {
         localStorage.removeItem('mock_session');
+        triggerMockAuthChange('SIGNED_OUT', null);
         return { error: null };
       },
       onAuthStateChange: (callback) => {
-        // Trigger callback on load
+        // Trigger callback immediately on load
         const session = JSON.parse(localStorage.getItem('mock_session'));
-        const user = session ? session.user : null;
         callback(session ? 'SIGNED_IN' : 'SIGNED_OUT', session);
+        
+        // Add to active tab listeners
+        mockAuthListeners.push(callback);
         
         // Listen to storage events for cross-tab updates
         const handler = (e) => {
@@ -78,7 +89,11 @@ if (isConfigured) {
         return {
           data: {
             subscription: {
-              unsubscribe: () => window.removeEventListener('storage', handler)
+              unsubscribe: () => {
+                window.removeEventListener('storage', handler);
+                const idx = mockAuthListeners.indexOf(callback);
+                if (idx !== -1) mockAuthListeners.splice(idx, 1);
+              }
             }
           }
         };
