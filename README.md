@@ -1,8 +1,8 @@
-# 🏆 LeetJourney | LeetCode Progress Tracker & Revision Helper
+# 🏆 LeetCrack | LeetCode Progress Tracker & Revision Helper
 
-LeetJourney is a premium, full-stack web application designed to help software engineers track, visualize, and optimize their Data Structures and Algorithms (DSA) preparation. 
+LeetCrack is a premium, full-stack web application designed to help software engineers track, visualize, and optimize their Data Structures and Algorithms (DSA) preparation. 
 
-Inspired by popular roadmaps like Striver's A2Z DSA Sheet, LeetJourney allows you to catalog your daily coding solves, organize problems by topic, store critical notes/tricks, and automatically receive revision prompts based on spaced repetition.
+Inspired by popular roadmaps like Striver's A2Z DSA Sheet, LeetCrack allows you to catalog your daily coding solves, organize problems by topic, store critical notes/tricks, and automatically receive revision prompts based on spaced repetition.
 
 ## 🚀 Key Features
 

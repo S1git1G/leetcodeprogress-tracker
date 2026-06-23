@@ -52,12 +52,12 @@ export default function Auth({ onAuthSuccess }) {
     try {
       // Sign up or sign in a mock guest user
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'guest@leetcodejourney.com',
+        email: 'guest@leetcrack.com',
         password: 'guestpassword123'
       }).catch(async () => {
         // If sign in fails because they don't exist, sign them up
         return await supabase.auth.signUp({
-          email: 'guest@leetcodejourney.com',
+          email: 'guest@leetcrack.com',
           password: 'guestpassword123'
         });
       });
@@ -105,7 +105,7 @@ export default function Auth({ onAuthSuccess }) {
             marginBottom: '0.5rem',
             fontWeight: 800
           }}>
-            LeetJourney
+            LeetCrack
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             {isSignUp ? 'Create an account to start tracking' : 'Sign in to sync your progress'}

@@ -26,7 +26,7 @@ export default function Sidebar({ activePage, setActivePage, user, solvedCount, 
     <div className="sidebar glass">
       <div className="sidebar-logo">
         <Trophy size={24} />
-        <span>LeetJourney</span>
+        <span>LeetCrack</span>
       </div>
 
       <div className="sidebar-menu">
