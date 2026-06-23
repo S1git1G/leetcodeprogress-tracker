@@ -101,21 +101,23 @@ export default function Auth({ onAuthSuccess }) {
     setMessage(null);
     setErrorMsg(null);
     try {
-      // Sign up or sign in a mock guest user
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Try to sign in the mock guest user
+      let res = await supabase.auth.signInWithPassword({
         email: 'guest@leetcrack.com',
         password: 'guestpassword123'
-      }).catch(async () => {
-        // If sign in fails because they don't exist, sign them up
-        return await supabase.auth.signUp({
+      });
+
+      // If sign in fails (e.g. because they don't exist yet), sign them up
+      if (res.error) {
+        res = await supabase.auth.signUp({
           email: 'guest@leetcrack.com',
           password: 'guestpassword123'
         });
-      });
+      }
 
-      if (error) throw error;
-      if (data?.user) {
-        onAuthSuccess && onAuthSuccess(data.user);
+      if (res.error) throw res.error;
+      if (res.data?.user) {
+        onAuthSuccess && onAuthSuccess(res.data.user);
       }
     } catch (err) {
       setErrorMsg(err.message || 'Could not log in as guest.');

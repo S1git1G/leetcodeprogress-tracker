@@ -25,6 +25,7 @@ if (isConfigured) {
   // Global tracking array for mock auth event listeners in the active tab
   const mockAuthListeners = [];
   const triggerMockAuthChange = (event, session) => {
+    console.log(`📣 Mock Auth Change Event: ${event}, Active listeners: ${mockAuthListeners.length}`);
     mockAuthListeners.forEach(cb => cb(event, session));
   };
 
@@ -66,6 +67,7 @@ if (isConfigured) {
         return { data: { user: session.user, session }, error: null };
       },
       signOut: async () => {
+        console.log('🚪 Mock signOut invoked');
         localStorage.removeItem('mock_session');
         triggerMockAuthChange('SIGNED_OUT', null);
         return { error: null };
@@ -77,6 +79,7 @@ if (isConfigured) {
         
         // Add to active tab listeners
         mockAuthListeners.push(callback);
+        console.log(`➕ Added auth listener. Total active: ${mockAuthListeners.length}`);
         
         // Listen to storage events for cross-tab updates
         const handler = (e) => {
